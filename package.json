@@ -1,0 +1,20 @@
+{
+  "name": "the-phonebook-backend",
+  "version": "0.1.0",
+  "description": "The backend for the-phonebook webpage",
+  "main": "main.js",
+  "author": "ndomvi",
+  "license": "MIT",
+  "scripts": {
+    "start": "node main.js",
+    "watch": "nodemon main.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "morgan": "^1.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4"
+  }
+}
