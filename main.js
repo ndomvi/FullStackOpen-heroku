@@ -44,9 +44,14 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  Person.findById(req.params.id).then(person => {
-    person ? res.json(person.toJSON()) : res.status(404).end()
-  })
+  Person.findById(req.params.id)
+    .then(person => {
+      person ? res.json(person.toJSON()) : res.status(404).end()
+    })
+    .catch(err => {
+      // console.log('ERROR: ', err)
+      res.status(400).send({ error: 'Incorrect ID' })
+    })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
