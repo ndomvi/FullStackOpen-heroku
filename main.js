@@ -4,7 +4,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
-// const mongoose = require('mongoose')
+
 const Person = require('./models/person')
 
 const app = express()
@@ -19,46 +19,31 @@ app.use(cors())
 app.use(bodyParser.json())
 
 // Logger
-morgan.token('content', (req, res) => {
-  return req.method === 'POST' ? JSON.stringify(req.body) : ''
-})
-
+morgan.token('content', (req, _) => (req.method === 'POST' ? JSON.stringify(req.body) : ''))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 
-app.get('/api/', (req, res) => {
+app.get('/api/', (_, res) => {
   res.send('<h1>The Phonebook backend API!</h1>')
 })
 
-app.get('/api/info', (req, res) => {
-  res.send(`
+app.get('/api/info', (_, res) => {
+  Person.countDocuments({}).then(size => {
+    res.send(`
           <h1>The Phonebook backend!</h1>
-          <div>The phonebook has info for ${persons.length} people.</div>
+          <div>The phonebook has info for ${size} people.</div>
           <div>${Date()}</div>
           `)
-})
-
-app.get('/api/persons', (req, res) => {
-  Person.find({}).then(persons => {
-    res.json(persons.map(person => person.toJSON()))
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
-  Person.findById(req.params.id)
-    .then(person => {
-      person ? res.json(person.toJSON()) : res.status(404).end()
-    })
-    .catch(err => {
-      // console.log('ERROR: ', err)
-      res.status(400).send({ error: 'Incorrect ID' })
-    })
+app.get('/api/persons', (_, res) => {
+  Person.find({}).then(persons => res.json(persons.map(person => person.toJSON())))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(person => person.id !== id)
-
-  res.status(204).end()
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(person => (person ? res.json(person.toJSON()) : res.status(404).end()))
+    .catch(err => next(err)) // res.status(400).send({ error: 'Incorrect ID' })
 })
 
 app.post('/api/persons', (req, res) => {
@@ -69,16 +54,41 @@ app.post('/api/persons', (req, res) => {
 
   const person = new Person({ name: body.name, number: body.number })
 
-  person.save().then(newPerson => {
-    res.json(newPerson.toJSON())
-  })
+  person.save().then(newPerson => res.json(newPerson.toJSON()))
 })
 
-const unknownEndpoint = (request, response) => {
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+  const person = { name: body.name, number: body.number }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => res.json(updatedPerson))
+    .catch(err => next(err))
+})
+
+app.delete('/api/persons/:id', (req, res) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then(() => res.status(204).end())
+    .catch(err => next(err))
+})
+
+const unknownEndpoint = (_, response) => {
   response.status(404).send({ error: 'Unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
+
+// Error handler
+const errorHandler = (err, req, res, next) => {
+  console.error(err.message)
+
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    return res.status(400).send({ error: 'Incorrect ID' })
+  }
+
+  next(err)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 
