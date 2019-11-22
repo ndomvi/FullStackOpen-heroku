@@ -19,7 +19,7 @@ app.use(cors())
 app.use(bodyParser.json())
 
 // Logger
-morgan.token('content', (req, _) => (req.method === 'POST' ? JSON.stringify(req.body) : ''))
+morgan.token('content', req => (req.method === 'POST' ? JSON.stringify(req.body) : ''))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 
 app.get('/api/', (_, res) => {
@@ -46,15 +46,18 @@ app.get('/api/persons/:id', (req, res, next) => {
     .catch(err => next(err)) // res.status(400).send({ error: 'Incorrect ID' })
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
-  if (!body.name) return res.status(400).json({ error: 'Missing name!' })
-  if (!body.number) return res.status(400).json({ error: 'Missing number!' })
+  // if (!body.name) return res.status(400).json({ error: 'Missing name!' })
+  // if (!body.number) return res.status(400).json({ error: 'Missing number!' })
 
   const person = new Person({ name: body.name, number: body.number })
 
-  person.save().then(newPerson => res.json(newPerson.toJSON()))
+  person
+    .save()
+    .then(newPerson => res.json(newPerson.toJSON()))
+    .catch(err => next(err))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -66,7 +69,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
     .then(() => res.status(204).end())
     .catch(err => next(err))
@@ -84,6 +87,8 @@ const errorHandler = (err, req, res, next) => {
 
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     return res.status(400).send({ error: 'Incorrect ID' })
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).send({ error: err.message })
   }
 
   next(err)
