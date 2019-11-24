@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node main.js",
+    "lint": "eslint .",
     "watch": "nodemon main.js",
     "build:ui": "rd /s /q frontend-build && cd ..\\FullStackOpen\\part2\\the-phonebook\\ && yarn build --prod && xcopy /E build ..\\..\\..\\FullStackOpen-heroku\\frontend-build\\",
     "deploy": "git push heroku master",
