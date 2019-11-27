@@ -32,7 +32,7 @@ app.use(bodyParser.json())
 app.use(middleware.requestLogger)
 
 // People api route
-app.use('/api/people', peopleRouter)
+app.use('/api/persons', peopleRouter)
 
 app.use(middleware.unknownEndpoint)
 

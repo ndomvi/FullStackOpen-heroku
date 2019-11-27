@@ -1,10 +1,6 @@
 const peopleRouter = require('express').Router()
 const Person = require('../models/person')
 
-peopleRouter.get('/', (_, res) => {
-  res.send('<h1>The Phonebook backend API!</h1>')
-})
-
 peopleRouter.get('/info', (_, res) => {
   Person.countDocuments({}).then(size => {
     res.send(`
