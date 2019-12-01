@@ -11,8 +11,9 @@ peopleRouter.get('/info', (_, res) => {
   })
 })
 
-peopleRouter.get('/', (_, res) => {
-  Person.find({}).then(persons => res.json(persons.map(person => person.toJSON())))
+peopleRouter.get('/', async (_, res) => {
+  const persons = await Person.find({})
+  res.json(persons.map(person => person.toJSON()))
 })
 
 peopleRouter.get('/:id', (req, res, next) => {
@@ -31,7 +32,7 @@ peopleRouter.post('/', (req, res, next) => {
 
   person
     .save()
-    .then(newPerson => res.json(newPerson.toJSON()))
+    .then(newPerson => res.status(201).json(newPerson.toJSON()))
     .catch(err => next(err))
 })
 
